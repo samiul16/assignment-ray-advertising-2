@@ -1,13 +1,59 @@
 "use client";
-import { Button, Box, Typography, Paper, TextField } from "@mui/material";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+
+const DUMMY_USER = {
+  id: "u123",
+  name: "Admin",
+  email: "admin@rayadvertising.com",
+  password: "password123",
+  role: "admin",
+};
 
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    // Perform login logic...
-    router.push("/board");
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // Simulate API delay
+    await new Promise((res) => setTimeout(res, 1000));
+
+    if (email === DUMMY_USER.email && password === DUMMY_USER.password) {
+      // Save user info in cookie (expires in 7 days)
+      Cookies.set(
+        "user-auth",
+        JSON.stringify({
+          id: DUMMY_USER.id,
+          name: DUMMY_USER.name,
+          role: DUMMY_USER.role,
+          email: DUMMY_USER.email,
+        }),
+        { expires: 7 }
+      );
+
+      router.push("/board");
+      router.refresh(); // Refresh to update middleware state
+    } else {
+      setError("Invalid email or password");
+      setLoading(false);
+    }
   };
 
   return (
@@ -20,20 +66,56 @@ export default function LoginPage() {
         bgcolor: "#f4f5f7",
       }}
     >
-      <Paper sx={{ p: 4, width: 400, textAlign: "center" }}>
-        <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
-          Log in to Jira
-        </Typography>
-        <TextField fullWidth label="Email" sx={{ mb: 2 }} />
-        <TextField fullWidth label="Password" type="password" sx={{ mb: 3 }} />
-        <Button
-          fullWidth
-          variant="contained"
-          onClick={handleLogin}
-          size="large"
-        >
-          Log In
-        </Button>
+      <Paper elevation={3} sx={{ p: 4, width: 400, borderRadius: 2 }}>
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Typography variant="h5" fontWeight={700} color="primary">
+            Ray Advertising
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Log in to your account
+          </Typography>
+        </Box>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleLogin}>
+          <TextField
+            fullWidth
+            label="Email"
+            variant="outlined"
+            sx={{ mb: 2 }}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            variant="outlined"
+            sx={{ mb: 3 }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <Button
+            fullWidth
+            variant="contained"
+            type="submit"
+            size="large"
+            disabled={loading}
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              "Log In"
+            )}
+          </Button>
+        </form>
       </Paper>
     </Box>
   );

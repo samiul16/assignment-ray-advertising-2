@@ -77,7 +77,12 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
 
     // ✅ Move Task
-    moveTask: async (taskId, newStatus, newOrder) => {
+    moveTask: async (
+      taskId: string,
+      newStatus: ColumnType,
+      newOrder: number
+    ) => {
+      console.log("Moving task", taskId, newStatus, newOrder);
       // Optimistic UI
       set((state) => ({
         tasks: state.tasks.map((task) =>

@@ -40,8 +40,18 @@ export default function Board() {
   const handleDragEnd = async (e: DragEndEvent) => {
     setActiveTask(null);
     const { active, over } = e;
-    if (!over) return;
-    await moveTask(active.id as string, over.id as any, Date.now());
+    if (
+      !over ||
+      (over.id !== "todo" && over.id !== "inprogress" && over.id !== "done")
+    )
+      return;
+    if (over.id === "todo" || over.id === "inprogress" || over.id === "done") {
+      await moveTask(
+        active.id as string,
+        over.id as "todo" | "inprogress" | "done",
+        Date.now()
+      );
+    }
   };
 
   return (

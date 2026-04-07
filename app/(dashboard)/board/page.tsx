@@ -9,7 +9,7 @@ export default function BoardPage() {
       {/* LOCAL HEADER */}
       <Box sx={{ px: 3, pt: 3, pb: 2 }}>
         <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
-          Marketing Board
+          Ray Advertising Team Board
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
           <AvatarGroup max={4}>

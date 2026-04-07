@@ -6,8 +6,8 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Jira Clone",
-  description: "Project Management",
+  title: "Ray Advertising",
+  description: "Kanban Management",
 };
 
 export default function RootLayout({

@@ -19,6 +19,8 @@
     "@mui/material": "^7.3.9",
     "@mui/material-nextjs": "^7.3.9",
     "@supabase/supabase-js": "^2.101.1",
+    "@types/js-cookie": "^3.0.6",
+    "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.3",
     "jwt-decode": "^4.0.0",
     "next": "16.2.2",
