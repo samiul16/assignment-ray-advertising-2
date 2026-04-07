@@ -14,6 +14,7 @@ import Column from "@/components/Board/Column";
 import TaskCard from "@/components/Board/TaskCard";
 import { Box } from "@mui/material";
 import { Task } from "@/types/task";
+import Cookies from "js-cookie";
 
 export default function Board() {
   const { tasks, fetchTasks, moveTask } = useTaskStore();
@@ -39,7 +40,9 @@ export default function Board() {
     // The over.id will be the columnId ('todo', 'inprogress', 'done')
     const newStatus = over.id as any;
 
-    await moveTask(taskId, newStatus, Date.now());
+    const user = Cookies.get("user-auth");
+    const userName = user ? JSON.parse(user).name : "Unknown User";
+    await moveTask(taskId, newStatus, Date.now(), userName);
   };
 
   return (
