@@ -1,9 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useMemo, useEffect } from "react";
-import Board from "@/components/Board/Board";
-import AddTaskModal from "@/components/AddTaskModal";
+import { useRouter } from "next/navigation";
 import {
   ThemeProvider,
   createTheme,
@@ -13,24 +11,33 @@ import {
   IconButton,
   GlobalStyles,
   Avatar,
-  AvatarGroup,
-  Breadcrumbs,
-  Link,
   TextField,
   InputAdornment,
+  Breadcrumbs,
+  Link,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import SettingsIcon from "@mui/icons-material/Settings";
 
-export default function BoardPage() {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const router = useRouter();
   const [mode, setMode] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  // MOCK AUTH CHECK (Replace with your actual auth logic)
+  const isAuthenticated = true; // Set to false to test redirect
+
+  useEffect(() => {
+    setMounted(true);
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
 
   const theme = useMemo(
     () =>
@@ -39,32 +46,24 @@ export default function BoardPage() {
           mode,
           primary: { main: "#0052CC" },
           background: {
-            default: mode === "light" ? "#FFFFFF" : "#091E42",
+            default: mode === "light" ? "#FFFFFF" : "#0f172a",
             paper: mode === "light" ? "#F4F5F7" : "#1d2125",
           },
-          text: {
-            primary: mode === "light" ? "#172B4D" : "#B8C7E0",
-          },
-        },
-        typography: {
-          fontFamily: "inherit",
-          h5: { fontWeight: 600, fontSize: "1.5rem" },
-          h6: { fontWeight: 600, fontSize: "1.1rem" },
         },
         shape: { borderRadius: 3 },
       }),
     [mode]
   );
 
-  if (!mounted) return null;
+  if (!mounted || !isAuthenticated) return null;
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GlobalStyles styles={{ ".MuiDialog-root": { zIndex: 9999 } }} />
 
-      <Box sx={{ display: "flex", height: "100vh" }}>
-        {/* SIDEBAR (Mocking Jira Sidebar) */}
+      <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+        {/* SIDEBAR */}
         <Box
           sx={{
             width: 240,
@@ -87,7 +86,7 @@ export default function BoardPage() {
             />
             <Box>
               <Typography variant="subtitle2" fontWeight={700}>
-                Marketing Campaign
+                Marketing
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Software project
@@ -98,7 +97,7 @@ export default function BoardPage() {
             variant="caption"
             fontWeight={700}
             color="text.secondary"
-            sx={{ mb: 1 }}
+            sx={{ mb: 1, px: 1 }}
           >
             PLANNING
           </Typography>
@@ -110,17 +109,35 @@ export default function BoardPage() {
                 borderRadius: 1,
                 color: "primary.main",
                 fontWeight: 600,
+                cursor: "pointer",
               }}
             >
               Kanban board
             </Box>
-            <Box sx={{ p: 1, color: "text.secondary" }}>Timeline</Box>
-            <Box sx={{ p: 1, color: "text.secondary" }}>Issues</Box>
-            <Box sx={{ p: 1, color: "text.secondary" }}>Reports</Box>
+            <Box
+              sx={{
+                p: 1,
+                color: "text.secondary",
+                cursor: "pointer",
+                "&:hover": { bgcolor: "action.hover" },
+              }}
+            >
+              Timeline
+            </Box>
+            <Box
+              sx={{
+                p: 1,
+                color: "text.secondary",
+                cursor: "pointer",
+                "&:hover": { bgcolor: "action.hover" },
+              }}
+            >
+              Issues
+            </Box>
           </Box>
         </Box>
 
-        {/* MAIN CONTENT */}
+        {/* MAIN AREA */}
         <Box
           sx={{
             flex: 1,
@@ -129,39 +146,34 @@ export default function BoardPage() {
             minWidth: 0,
           }}
         >
-          {/* TOP NAV */}
+          {/* NAVBAR */}
           <Box
             sx={{
               height: 56,
+              px: 3,
               borderBottom: "1px solid",
               borderColor: "divider",
               display: "flex",
               alignItems: "center",
-              px: 3,
               justifyContent: "space-between",
             }}
           >
-            <Breadcrumbs aria-label="breadcrumb" sx={{ fontSize: "0.85rem" }}>
+            <Breadcrumbs sx={{ fontSize: "0.85rem" }}>
               <Link underline="hover" color="inherit" href="#">
                 Projects
-              </Link>
-              <Link underline="hover" color="inherit" href="#">
-                Marketing Campaign
               </Link>
               <Typography color="text.primary" sx={{ fontSize: "0.85rem" }}>
                 Marketing
               </Typography>
             </Breadcrumbs>
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
               <TextField
                 size="small"
                 placeholder="Search"
                 InputProps={{
                   startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon fontSize="small" />
-                    </InputAdornment>
+                    <SearchIcon fontSize="small" sx={{ mr: 1, opacity: 0.5 }} />
                   ),
                 }}
                 sx={{ width: 200, "& .MuiOutlinedInput-root": { height: 32 } }}
@@ -176,59 +188,20 @@ export default function BoardPage() {
                   <Brightness4Icon fontSize="small" />
                 )}
               </IconButton>
-              <NotificationsNoneIcon
-                fontSize="small"
-                sx={{ color: "text.secondary" }}
-              />
-              <HelpOutlineIcon
-                fontSize="small"
-                sx={{ color: "text.secondary" }}
-              />
-              <SettingsIcon fontSize="small" sx={{ color: "text.secondary" }} />
-              <Avatar
-                sx={{ width: 28, height: 28 }}
-                src="https://i.pravatar.cc/150?u=1"
-              />
+              <Avatar sx={{ width: 28, height: 28, cursor: "pointer" }} />
             </Box>
           </Box>
 
-          {/* BOARD HEADER */}
-          <Box sx={{ px: 3, pt: 3, pb: 2 }}>
-            <Typography variant="h5" sx={{ mb: 2 }}>
-              Marketing
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-              <AvatarGroup max={4}>
-                <Avatar
-                  sx={{ width: 32, height: 32 }}
-                  src="https://i.pravatar.cc/150?u=2"
-                />
-                <Avatar
-                  sx={{ width: 32, height: 32 }}
-                  src="https://i.pravatar.cc/150?u=3"
-                />
-                <Avatar
-                  sx={{ width: 32, height: 32 }}
-                  src="https://i.pravatar.cc/150?u=4"
-                />
-                <Avatar
-                  sx={{ width: 32, height: 32 }}
-                  src="https://i.pravatar.cc/150?u=5"
-                />
-              </AvatarGroup>
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Group by: <b>None</b>
-                </Typography>
-              </Box>
-              <Box sx={{ flexGrow: 1 }} />
-              <AddTaskModal />
-            </Box>
-          </Box>
-
-          {/* BOARD BODY */}
-          <Box sx={{ flex: 1, overflow: "hidden" }}>
-            <Board />
+          {/* PAGE CONTENT (The Board) */}
+          <Box
+            sx={{
+              flex: 1,
+              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {children}
           </Box>
         </Box>
       </Box>
