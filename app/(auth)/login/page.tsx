@@ -11,14 +11,7 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
-
-const DUMMY_USER = {
-  id: "u123",
-  name: "Admin",
-  email: "admin@rayadvertising.com",
-  password: "password123",
-  role: "admin",
-};
+import { DUMMY_USERS } from "@/data/dummy-users";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,15 +28,18 @@ export default function LoginPage() {
     // Simulate API delay
     await new Promise((res) => setTimeout(res, 1000));
 
-    if (email === DUMMY_USER.email && password === DUMMY_USER.password) {
+    const user = DUMMY_USERS.find(
+      (user) => user.email === email && user.password === password
+    );
+    if (user) {
       // Save user info in cookie (expires in 7 days)
       Cookies.set(
         "user-auth",
         JSON.stringify({
-          id: DUMMY_USER.id,
-          name: DUMMY_USER.name,
-          role: DUMMY_USER.role,
-          email: DUMMY_USER.email,
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          email: user.email,
         }),
         { expires: 7 }
       );
