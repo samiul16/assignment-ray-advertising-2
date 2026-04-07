@@ -1,20 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// Column.tsx
 "use client";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Box, Typography, Paper } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import TaskCard from "./TaskCard";
 import { useMemo } from "react";
+import { Task } from "@/types/task";
 import { useTaskStore } from "@/store/useTaskStore";
 
 export default function Column({
   columnId,
   title,
 }: {
-  columnId: any;
+  columnId: string;
   title: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: columnId });
@@ -23,60 +24,59 @@ export default function Column({
   const columnTasks = useMemo(
     () =>
       tasks
-        .filter((t: { status: string }) => t.status === columnId)
-        .sort(
-          (a: { order_index: number }, b: { order_index: number }) =>
-            a.order_index - b.order_index
-        ),
+        .filter((t: Task) => t.status === columnId)
+        .sort((a: Task, b: Task) => a.order_index - b.order_index),
     [tasks, columnId]
   );
 
   return (
-    <Paper
+    <Box
       ref={setNodeRef}
-      elevation={0}
       sx={{
-        width: 300,
-        flexShrink: 0,
-        bgcolor: isOver ? "action.hover" : "background.paper",
+        width: 280,
+        minWidth: 280,
         display: "flex",
         flexDirection: "column",
-        maxHeight: "100%",
-        borderRadius: 2,
-        transition: "background-color 0.2s",
+        bgcolor: isOver ? "action.hover" : "background.paper",
+        borderRadius: 1.5,
+        p: 1,
+        maxHeight: "calc(100vh - 250px)",
+        transition: "0.2s",
       }}
     >
       <Typography
         variant="caption"
         sx={{
-          p: 2,
+          p: 1,
           fontWeight: 700,
           color: "text.secondary",
-          letterSpacing: 1,
+          textTransform: "uppercase",
         }}
       >
-        {title} {columnTasks.length}
+        {title}{" "}
+        <span style={{ marginLeft: 4, opacity: 0.7 }}>
+          {columnTasks.length}
+        </span>
       </Typography>
 
-      <SortableContext
-        items={columnTasks.map((t) => t.id)}
-        strategy={verticalListSortingStrategy}
+      <Box
+        sx={{
+          overflowY: "auto",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+        }}
       >
-        <Box
-          sx={{
-            p: 1,
-            overflowY: "auto",
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: 1,
-          }}
+        <SortableContext
+          items={columnTasks.map((t: Task) => t.id)}
+          strategy={verticalListSortingStrategy}
         >
-          {columnTasks.map((task) => (
+          {columnTasks.map((task: Task) => (
             <TaskCard key={task.id} task={task} />
           ))}
-        </Box>
-      </SortableContext>
-    </Paper>
+        </SortableContext>
+      </Box>
+    </Box>
   );
 }

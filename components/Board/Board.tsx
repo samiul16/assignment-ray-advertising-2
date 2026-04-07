@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+// Board.tsx
 "use client";
 import { useState, useEffect } from "react";
 import {
@@ -15,36 +16,32 @@ import { useTaskStore } from "@/store/useTaskStore";
 import Column from "./Column";
 import TaskCard from "./TaskCard";
 import { Box } from "@mui/material";
-import { Task } from "@/types/task";
 
 export default function Board() {
   const { tasks, fetchTasks, moveTask } = useTaskStore();
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTask, setActiveTask] = useState<any>(null);
 
-  // Fix: DnD-kit needs sensors to distinguish between "click" and "drag"
+  // CRITICAL: This allows clicking "Edit" without triggering a drag
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
   );
 
   useEffect(() => {
     fetchTasks();
   }, []);
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const task = tasks.find((t) => t.id === event.active.id);
-    if (task) setActiveTask(task);
+  const handleDragStart = (e: DragStartEvent) => {
+    const task = tasks.find((t) => t.id === e.active.id);
+    setActiveTask(task);
   };
 
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = async (e: DragEndEvent) => {
     setActiveTask(null);
+    const { active, over } = e;
     if (!over) return;
-
-    const taskId = active.id as string;
-    const newStatus = over.id as any;
-
-    // Logic: moveTask(id, status, order_index)
-    await moveTask(taskId, newStatus, Date.now());
+    await moveTask(active.id as string, over.id as any, Date.now());
   };
 
   return (
@@ -57,23 +54,21 @@ export default function Board() {
       <Box
         sx={{
           display: "flex",
-          gap: 2,
-          p: 3,
+          gap: 1.5,
+          px: 3,
           height: "100%",
-          overflowX: "auto", // Jira-style horizontal scroll
+          overflowX: "auto",
+          pb: 4,
           alignItems: "flex-start",
-          "&::-webkit-scrollbar": { height: 8 },
-          "&::-webkit-scrollbar-thumb": { bgcolor: "#0003", borderRadius: 4 },
         }}
       >
         <Column columnId="todo" title="TO DO" />
         <Column columnId="inprogress" title="IN PROGRESS" />
         <Column columnId="done" title="DONE" />
       </Box>
-
       <DragOverlay>
         {activeTask ? (
-          <Box sx={{ width: 300, transform: "rotate(3deg)" }}>
+          <Box sx={{ width: 280, transform: "rotate(2deg)" }}>
             <TaskCard task={activeTask} isOverlay />
           </Box>
         ) : null}
