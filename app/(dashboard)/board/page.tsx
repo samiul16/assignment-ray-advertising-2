@@ -10,6 +10,7 @@ import {
   Alert,
 } from "@mui/material";
 import { useTaskStore } from "@/store/useTaskStore";
+import { useEffect } from "react";
 
 // The Notification Component
 export function RealtimeNotification() {
@@ -38,6 +39,15 @@ export function RealtimeNotification() {
 }
 
 export default function BoardPage() {
+  const fetchTasks = useTaskStore((state) => state.fetchTasks);
+
+  useEffect(() => {
+    // 🚀 Initialize realtime
+    useTaskStore.getState().initRealtime();
+
+    // Fetch initial data
+    fetchTasks();
+  }, [fetchTasks]);
   return (
     <>
       {/* 1. Add the notification component here */}

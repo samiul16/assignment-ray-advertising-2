@@ -1,110 +1,158 @@
 import { create } from "zustand";
 import { Task, ColumnType } from "@/types/task";
 import { supabase } from "@/lib/supabase";
+import Cookies from "js-cookie";
 
 interface TaskState {
   tasks: Task[];
-  notification: string | null; // For the real-time toast
+  notification: string | null;
+
   setNotification: (msg: string | null) => void;
+
   fetchTasks: () => Promise<void>;
+
   moveTask: (
     taskId: string,
     newStatus: ColumnType,
     newOrder: number,
     userName: string
   ) => Promise<void>;
+
   updateTask: (
     taskId: string,
     title: string,
     description: string,
     userName: string
   ) => Promise<void>;
+
   addTask: (data: Task, userName: string) => Promise<void>;
+
+  initRealtime: () => void;
 }
 
-// Create a single broadcast channel for UI notifications
-const notificationChannel = supabase.channel("board-notifications");
+let isRealtimeInitialized = false;
 
-export const useTaskStore = create<TaskState>((set, get) => {
-  // 1. Listen for Broadcast messages (Realtime UI Notifications)
-  notificationChannel
-    .on("broadcast", { event: "task-moved" }, ({ payload }) => {
-      console.log("Broadcast received:", payload);
-      set({ notification: payload.message });
-    })
-    .subscribe();
+export const useTaskStore = create<TaskState>((set, get) => ({
+  tasks: [],
+  notification: null,
 
-  // 2. Postgres Changes (Syncing Data)
-  supabase
-    .channel("tasks-db-changes")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "tasks" },
-      async () => {
-        const { data } = await supabase.from("tasks").select("*");
-        set({ tasks: data || [] });
-      }
-    )
-    .subscribe();
+  setNotification: (msg) => set({ notification: msg }),
 
-  return {
-    tasks: [],
-    notification: null,
-    setNotification: (msg) => set({ notification: msg }),
+  // 🚀 REALTIME INIT
 
-    fetchTasks: async () => {
-      const { data } = await supabase.from("tasks").select("*");
-      set({ tasks: data || [] });
-    },
+  initRealtime: () => {
+    if (isRealtimeInitialized) return;
 
-    moveTask: async (taskId, newStatus, newOrder, userName) => {
-      const task = get().tasks.find((t) => t.id === taskId);
-      const message = `${userName} moved task: ${task?.title}`;
+    isRealtimeInitialized = true;
 
-      // 1. Broadcast to others immediately
-      notificationChannel.send({
-        type: "broadcast",
-        event: "task-moved",
-        payload: { message },
-      });
+    console.log("Realtime Initialized");
 
-      // 2. Update DB with metadata
-      await supabase
-        .from("tasks")
-        .update({
-          status: newStatus,
-          order_index: newOrder,
-          updated_by: userName, // User's name
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", taskId);
-    },
+    // -------------------------
+    // Broadcast Channel
+    // -------------------------
 
-    updateTask: async (taskId, title, description, userName) => {
-      await supabase
-        .from("tasks")
-        .update({
-          title,
-          description,
-          updated_by: userName,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", taskId);
-    },
+    const notificationChannel = supabase.channel("board-notifications");
 
-    addTask: async ({ id, title, description, status }, userName) => {
-      console.log("Adding task:", { title, description, status, userName });
-      const { data, error } = await supabase.from("tasks").insert([
+    notificationChannel
+      .on("broadcast", { event: "task-moved" }, ({ payload }) => {
+        const currentUser = Cookies.get("user-auth");
+
+        const user = currentUser ? JSON.parse(currentUser) : null;
+
+        const currentUserName = user?.name;
+
+        // Ignore own message
+        if (payload.sender === currentUserName) return;
+
+        set({
+          notification: payload.message,
+        });
+      })
+      .subscribe();
+
+    // -------------------------
+    // Database Changes
+    // -------------------------
+
+    const dbChannel = supabase.channel("tasks-db-changes");
+
+    dbChannel
+      .on(
+        "postgres_changes",
         {
-          id,
-          title,
-          description,
-          status,
-          order_index: Date.now(),
-          created_by: userName,
+          event: "*",
+          schema: "public",
+          table: "tasks",
         },
-      ]);
-      console.log("Add task result:", { data, error });
-    },
-  };
-});
+        async () => {
+          const { data } = await supabase.from("tasks").select("*");
+
+          set({
+            tasks: data || [],
+          });
+        }
+      )
+      .subscribe();
+  },
+
+  // -------------------------
+  // API Calls
+  // -------------------------
+
+  fetchTasks: async () => {
+    const res = await fetch("/api/tasks");
+
+    const data = await res.json();
+
+    set({ tasks: data });
+  },
+
+  moveTask: async (taskId, newStatus, newOrder, userName) => {
+    await fetch("/api/tasks/move", {
+      method: "PATCH",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        taskId,
+        newStatus,
+        newOrder,
+        userName,
+      }),
+    });
+  },
+
+  updateTask: async (taskId, title, description, userName) => {
+    await fetch("/api/tasks/update", {
+      method: "PATCH",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        taskId,
+        title,
+        description,
+        userName,
+      }),
+    });
+  },
+
+  addTask: async (data, userName) => {
+    await fetch("/api/tasks", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        ...data,
+        userName,
+      }),
+    });
+  },
+}));
