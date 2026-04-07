@@ -20,43 +20,71 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
+import MenuIcon from "@mui/icons-material/Menu"; // Added Menu Icon
+import { User } from "@/types/user";
 
 interface NavbarProps {
   mode: "light" | "dark";
   setMode: (mode: "light" | "dark") => void;
-  user: {
-    name: string;
-    email: string;
-    role: string;
-  };
+  user: User;
   onLogout: () => void;
+  onMenuClick?: () => void; // Used to open the drawer
 }
 
-export default function Navbar({ mode, setMode, user, onLogout }: NavbarProps) {
+export default function Navbar({
+  mode,
+  setMode,
+  user,
+  onLogout,
+  onMenuClick,
+}: NavbarProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   return (
     <Box
       sx={{
         height: 56,
-        px: 3,
+        px: { xs: 1, sm: 3 }, // Smaller padding on mobile
         borderBottom: "1px solid",
         borderColor: "divider",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
+        bgcolor: "background.default",
       }}
     >
-      <Breadcrumbs sx={{ fontSize: "0.85rem" }}>
-        <Link underline="hover" color="inherit" href="#">
-          Projects
-        </Link>
-        <Typography color="text.primary" sx={{ fontSize: "0.85rem" }}>
-          Marketing
-        </Typography>
-      </Breadcrumbs>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        {/* HAMBURGER MENU: Visible only on mobile/tablet (xs, sm) */}
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={onMenuClick}
+          sx={{ mr: 1, display: { md: "none" } }}
+        >
+          <MenuIcon />
+        </IconButton>
 
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        {/* BREADCRUMBS: Hidden on extra small screens to save space */}
+        <Breadcrumbs
+          sx={{
+            fontSize: "0.85rem",
+            display: { xs: "none", sm: "flex" },
+          }}
+        >
+          <Link underline="hover" color="inherit" href="#">
+            Projects
+          </Link>
+          <Typography color="text.primary" sx={{ fontSize: "0.85rem" }}>
+            Marketing
+          </Typography>
+        </Breadcrumbs>
+      </Box>
+
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}
+      >
+        {/* SEARCH: Shrinks on mobile */}
         <TextField
           size="small"
           placeholder="Search"
@@ -65,7 +93,10 @@ export default function Navbar({ mode, setMode, user, onLogout }: NavbarProps) {
               <SearchIcon fontSize="small" sx={{ mr: 1, opacity: 0.5 }} />
             ),
           }}
-          sx={{ width: 200, "& .MuiOutlinedInput-root": { height: 32 } }}
+          sx={{
+            width: { xs: 100, sm: 200 },
+            "& .MuiOutlinedInput-root": { height: 32 },
+          }}
         />
 
         <IconButton
@@ -79,6 +110,7 @@ export default function Navbar({ mode, setMode, user, onLogout }: NavbarProps) {
           )}
         </IconButton>
 
+        {/* Hide Notifications on very small screens if needed, or keep it */}
         <IconButton size="small">
           <Badge color="error" variant="dot">
             <NotificationsNoneIcon fontSize="small" />
@@ -88,13 +120,19 @@ export default function Navbar({ mode, setMode, user, onLogout }: NavbarProps) {
         <Divider
           orientation="vertical"
           flexItem
-          sx={{ mx: 1, height: 24, my: "auto" }}
+          sx={{
+            mx: 1,
+            height: 24,
+            my: "auto",
+            display: { xs: "none", sm: "block" },
+          }}
         />
 
         {/* User Info & Avatar */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: 1 }}>
+          {/* User Name/Role hidden on small screens */}
           <Box
-            sx={{ textAlign: "right", display: { xs: "none", sm: "block" } }}
+            sx={{ textAlign: "right", display: { xs: "none", md: "block" } }}
           >
             <Typography variant="body2" fontWeight={600} lineHeight={1}>
               {user?.name}
@@ -120,7 +158,7 @@ export default function Navbar({ mode, setMode, user, onLogout }: NavbarProps) {
                 bgcolor: "primary.main",
               }}
             >
-              {user?.name?.charAt(0)}
+              {user?.name?.charAt(0).toUpperCase()}
             </Avatar>
           </IconButton>
         </Box>

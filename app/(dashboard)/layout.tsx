@@ -9,6 +9,7 @@ import {
   CssBaseline,
   Box,
   GlobalStyles,
+  Drawer,
 } from "@mui/material";
 import Sidebar from "@/components/layout/Sidebar";
 import Navbar from "@/components/layout/Navbar";
@@ -23,6 +24,7 @@ export default function DashboardLayout({
   const [mode, setMode] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false); // Mobile state
 
   useEffect(() => {
     setMounted(true);
@@ -33,6 +35,10 @@ export default function DashboardLayout({
       setUser(JSON.parse(session));
     }
   }, [router]);
+
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
 
   const handleLogout = () => {
     Cookies.remove("user-auth");
@@ -64,7 +70,24 @@ export default function DashboardLayout({
       <GlobalStyles styles={{ ".MuiDialog-root": { zIndex: 9999 } }} />
 
       <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-        <Sidebar mode={mode} />
+        {/* MOBILE SIDEBAR (Drawer) */}
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{ keepMounted: true }} // Better open performance on mobile
+          sx={{
+            display: { xs: "block", md: "none" },
+            "& .MuiDrawer-paper": { width: 240 },
+          }}
+        >
+          <Sidebar mode={mode} user={user} />
+        </Drawer>
+
+        {/* DESKTOP SIDEBAR */}
+        <Box sx={{ display: { xs: "none", md: "block" } }}>
+          <Sidebar mode={mode} user={user} />
+        </Box>
 
         <Box
           sx={{
@@ -79,6 +102,7 @@ export default function DashboardLayout({
             setMode={setMode}
             user={user}
             onLogout={handleLogout}
+            onMenuClick={handleDrawerToggle} // Pass toggle to Navbar
           />
 
           <Box

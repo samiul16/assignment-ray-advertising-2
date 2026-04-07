@@ -1,15 +1,52 @@
 "use client";
 import Board from "@/components/Board/Board";
 import AddTaskModal from "@/components/AddTaskModal";
-import { Box, Typography, Avatar, AvatarGroup } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Avatar,
+  AvatarGroup,
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { useTaskStore } from "@/store/useTaskStore";
+
+// The Notification Component
+export function RealtimeNotification() {
+  const { notification, setNotification } = useTaskStore();
+
+  console.log("Notification in component:", notification);
+
+  return (
+    <Snackbar
+      open={!!notification}
+      autoHideDuration={4000}
+      onClose={() => setNotification(null)}
+      // Standard Jira blue-ish color for info notifications
+      anchorOrigin={{ vertical: "top", horizontal: "right" }}
+    >
+      <Alert
+        onClose={() => setNotification(null)}
+        severity="info"
+        variant="filled"
+        sx={{ width: "100%", fontWeight: 500 }}
+      >
+        {notification}
+      </Alert>
+    </Snackbar>
+  );
+}
 
 export default function BoardPage() {
   return (
     <>
+      {/* 1. Add the notification component here */}
+      <RealtimeNotification />
+
       {/* LOCAL HEADER */}
       <Box sx={{ px: 3, pt: 3, pb: 2 }}>
         <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
-          Ray Advertising Team Board
+          Marketing Board
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
           <AvatarGroup max={4}>
@@ -34,7 +71,14 @@ export default function BoardPage() {
       </Box>
 
       {/* THE KANBAN DRAG AREA */}
-      <Box sx={{ flex: 1, overflow: "hidden" }}>
+      <Box
+        sx={{
+          flex: 1,
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Board />
       </Box>
     </>

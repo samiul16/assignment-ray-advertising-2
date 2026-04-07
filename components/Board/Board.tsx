@@ -17,6 +17,7 @@ import Column from "./Column";
 import TaskCard from "./TaskCard";
 import { Box } from "@mui/material";
 import { ColumnType, Task } from "@/types/task";
+import Cookies from "js-cookie";
 
 export default function Board() {
   const { tasks, fetchTasks, moveTask } = useTaskStore();
@@ -97,8 +98,10 @@ export default function Board() {
       newOrderIndex = (prev.order_index + next.order_index) / 2;
     }
 
-    // 4. Update Store and DB
-    await moveTask(activeId, newStatus, Math.round(newOrderIndex));
+    const session = Cookies.get("user-auth");
+    const userName = session ? JSON.parse(session).name : "Unknown User";
+
+    await moveTask(activeId, newStatus, Math.round(newOrderIndex), userName);
   };
 
   return (

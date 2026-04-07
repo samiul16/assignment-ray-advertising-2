@@ -1,21 +1,40 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
-
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import { useTaskStore } from "@/store/useTaskStore";
-
 import { ColumnType } from "@/types/task";
+import Cookies from "js-cookie";
+import {
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Box,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { v4 as uuidv4 } from "uuid";
 
 export default function AddTaskModal() {
   const { addTask } = useTaskStore();
-
   const [open, setOpen] = useState(false);
-
   const [title, setTitle] = useState("");
-
   const [description, setDescription] = useState("");
-
   const [status, setStatus] = useState<ColumnType>("todo");
+  const [userName, setUserName] = useState("Anonymous");
+
+  useEffect(() => {
+    const authData = Cookies.get("user-auth");
+    if (authData) {
+      const user = JSON.parse(authData);
+      setUserName(user.name); // Get actual user name
+    }
+  }, []);
 
   const handleSubmit = async () => {
     if (!title) return;
@@ -25,89 +44,77 @@ export default function AddTaskModal() {
         title,
         description,
         status,
-      }
-      // "current-user-id" // TODO: Get from auth
+        id: uuidv4(),
+        order_index: 0,
+        created_by: userName,
+      },
+      userName
     );
 
     setTitle("");
-
     setDescription("");
-
     setStatus("todo");
-
     setOpen(false);
   };
 
   return (
     <>
-      {/* Open Button */}
-
-      <button
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
         onClick={() => setOpen(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        sx={{ textTransform: "none", fontWeight: 600 }}
       >
-        + Add Task
-      </button>
+        Add Task
+      </Button>
 
-      {/* Modal */}
-
-      {open && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-[400px] space-y-4">
-            <h2 className="text-lg font-bold">Add Task</h2>
-
-            {/* Title */}
-
-            <input
-              placeholder="Task title"
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Create New Task</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <TextField
+              label="Task Title"
+              fullWidth
+              autoFocus
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full border p-2 rounded"
             />
-
-            {/* Description */}
-
-            <textarea
-              placeholder="Description"
+            <TextField
+              label="Description"
+              fullWidth
+              multiline
+              rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full border p-2 rounded"
             />
-
-            {/* Status */}
-
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as ColumnType)}
-              className="w-full border p-2 rounded"
-            >
-              <option value="todo">To Do</option>
-
-              <option value="inprogress">In Progress</option>
-
-              <option value="done">Done</option>
-            </select>
-
-            {/* Actions */}
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setOpen(false)}
-                className="px-4 py-2 border rounded"
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={status}
+                label="Status"
+                onChange={(e) => setStatus(e.target.value as ColumnType)}
               >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSubmit}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                <MenuItem value="todo">To Do</MenuItem>
+                <MenuItem value="inprogress">In Progress</MenuItem>
+                <MenuItem value="done">Done</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setOpen(false)} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} variant="contained" disabled={!title}>
+            Create Task
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }

@@ -1,54 +1,47 @@
 import { create } from "zustand";
 import { Task, ColumnType } from "@/types/task";
-import { v4 as uuidv4 } from "uuid";
 import { supabase } from "@/lib/supabase";
 
 interface TaskState {
   tasks: Task[];
-
-  addTask: ({
-    title,
-    description,
-    status,
-  }: {
-    title: string;
-    description: string;
-    status: ColumnType;
-  }) => Promise<void>;
-
+  notification: string | null; // For the real-time toast
+  setNotification: (msg: string | null) => void;
+  fetchTasks: () => Promise<void>;
   moveTask: (
     taskId: string,
-    newColumn: ColumnType,
-    newOrder: number
+    newStatus: ColumnType,
+    newOrder: number,
+    userName: string
   ) => Promise<void>;
-
   updateTask: (
     taskId: string,
     title: string,
-    description: string
+    description: string,
+    userName: string
   ) => Promise<void>;
-
-  setTasks: (tasks: Task[]) => void;
-
-  fetchTasks: () => Promise<void>;
+  addTask: (data: Task, userName: string) => Promise<void>;
 }
 
+// Create a single broadcast channel for UI notifications
+const notificationChannel = supabase.channel("board-notifications");
+
 export const useTaskStore = create<TaskState>((set, get) => {
-  // ✅ Supabase Realtime Listener
+  // 1. Listen for Broadcast messages (Realtime UI Notifications)
+  notificationChannel
+    .on("broadcast", { event: "task-moved" }, ({ payload }) => {
+      console.log("Broadcast received:", payload);
+      set({ notification: payload.message });
+    })
+    .subscribe();
+
+  // 2. Postgres Changes (Syncing Data)
   supabase
-    .channel("tasks-realtime")
+    .channel("tasks-db-changes")
     .on(
       "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "tasks",
-      },
+      { event: "*", schema: "public", table: "tasks" },
       async () => {
-        console.log("Realtime update received");
-
         const { data } = await supabase.from("tasks").select("*");
-
         set({ tasks: data || [] });
       }
     )
@@ -56,83 +49,62 @@ export const useTaskStore = create<TaskState>((set, get) => {
 
   return {
     tasks: [],
+    notification: null,
+    setNotification: (msg) => set({ notification: msg }),
 
-    setTasks: (tasks) => set({ tasks }),
-
-    // ✅ Add Task
-    addTask: async ({ title, description, status }) => {
-      const newTask = {
-        id: uuidv4(),
-
-        title,
-
-        description,
-
-        status,
-
-        order_index: Date.now(),
-      };
-
-      await supabase.from("tasks").insert([newTask]);
+    fetchTasks: async () => {
+      const { data } = await supabase.from("tasks").select("*");
+      set({ tasks: data || [] });
     },
 
-    // ✅ Move Task
-    // Inside moveTask in useTaskStore.ts
-    moveTask: async (
-      taskId: string,
-      newStatus: ColumnType,
-      newOrder: number
-    ) => {
-      // Optimistic UI Update
-      set((state) => {
-        const updatedTasks = state.tasks.map((task) =>
-          task.id === taskId
-            ? { ...task, status: newStatus, order_index: newOrder }
-            : task
-        );
-        return { tasks: updatedTasks };
+    moveTask: async (taskId, newStatus, newOrder, userName) => {
+      const task = get().tasks.find((t) => t.id === taskId);
+      const message = `${userName} moved task: ${task?.title}`;
+
+      // 1. Broadcast to others immediately
+      notificationChannel.send({
+        type: "broadcast",
+        event: "task-moved",
+        payload: { message },
       });
 
-      // Database Update
-      const { error } = await supabase
+      // 2. Update DB with metadata
+      await supabase
         .from("tasks")
         .update({
           status: newStatus,
           order_index: newOrder,
+          updated_by: userName, // User's name
+          updated_at: new Date().toISOString(),
         })
         .eq("id", taskId);
-
-      if (error) {
-        console.error("Failed to move task:", error);
-        // Optional: Refresh tasks from DB if error occurs to sync UI
-        const { data } = await supabase.from("tasks").select("*");
-        if (data) set({ tasks: data });
-      }
     },
 
-    // ✅ Update Task
-    updateTask: async (taskId, title, description) => {
+    updateTask: async (taskId, title, description, userName) => {
       await supabase
         .from("tasks")
         .update({
           title,
-
           description,
+          updated_by: userName,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", taskId);
     },
 
-    // ✅ Fetch Tasks
-    fetchTasks: async () => {
-      const { data, error } = await supabase.from("tasks").select("*");
-
-      if (error) {
-        console.error("Error fetching tasks:", error);
-
-        return;
-      }
-
-      set({ tasks: data || [] });
+    addTask: async ({ id, title, description, status }, userName) => {
+      console.log("Adding task:", { title, description, status, userName });
+      const { data, error } = await supabase.from("tasks").insert([
+        {
+          id,
+          title,
+          description,
+          status,
+          order_index: Date.now(),
+          created_by: userName,
+        },
+      ]);
+      console.log("Add task result:", { data, error });
     },
   };
 });
