@@ -1,60 +1,77 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { ColumnType } from "@/types/task";
-import { useTaskStore } from "@/store/useTaskStore";
+import { Box, Typography, Paper } from "@mui/material";
 import TaskCard from "./TaskCard";
 import { useMemo } from "react";
-import { Paper, Typography, Box, useTheme } from "@mui/material";
+import { useTaskStore } from "@/store/useTaskStore";
 
-interface Props {
-  columnId: ColumnType;
+export default function Column({
+  columnId,
+  title,
+}: {
+  columnId: any;
   title: string;
-}
-
-export default function Column({ columnId, title }: Props) {
-  const { setNodeRef } = useDroppable({ id: columnId });
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: columnId });
   const tasks = useTaskStore((state) => state.tasks);
-  const theme = useTheme();
 
   const columnTasks = useMemo(
     () =>
       tasks
-        .filter((task) => task.status === columnId)
-        .sort((a, b) => a.order_index - b.order_index),
+        .filter((t: { status: string }) => t.status === columnId)
+        .sort(
+          (a: { order_index: number }, b: { order_index: number }) =>
+            a.order_index - b.order_index
+        ),
     [tasks, columnId]
   );
-
-  const taskIds = columnTasks.map((task) => task.id);
 
   return (
     <Paper
       ref={setNodeRef}
       elevation={0}
       sx={{
-        p: 2,
-        minHeight: 600,
-        backgroundColor: theme.palette.mode === "dark" ? "#1e1e1e" : "#f4f5f7",
+        width: 300,
+        flexShrink: 0,
+        bgcolor: isOver ? "action.hover" : "background.paper",
+        display: "flex",
+        flexDirection: "column",
+        maxHeight: "100%",
         borderRadius: 2,
-        border: `1px solid ${theme.palette.divider}`,
+        transition: "background-color 0.2s",
       }}
     >
-      <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, px: 1 }}>
-        {title}
-        <Typography
-          component="span"
-          sx={{ ml: 1, opacity: 0.5, fontSize: "0.9rem" }}
-        >
-          ({columnTasks.length})
-        </Typography>
+      <Typography
+        variant="caption"
+        sx={{
+          p: 2,
+          fontWeight: 700,
+          color: "text.secondary",
+          letterSpacing: 1,
+        }}
+      >
+        {title} {columnTasks.length}
       </Typography>
 
-      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+      <SortableContext
+        items={columnTasks.map((t) => t.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <Box
+          sx={{
+            p: 1,
+            overflowY: "auto",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
+        >
           {columnTasks.map((task) => (
             <TaskCard key={task.id} task={task} />
           ))}

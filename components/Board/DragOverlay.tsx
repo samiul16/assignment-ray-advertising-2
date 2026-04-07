@@ -12,7 +12,7 @@ import {
 import { useTaskStore } from "@/store/useTaskStore";
 import Column from "@/components/Board/Column";
 import TaskCard from "@/components/Board/TaskCard";
-import { Box, Grid } from "@mui/material";
+import { Box } from "@mui/material";
 import { Task } from "@/types/task";
 
 export default function Board() {
@@ -36,6 +36,7 @@ export default function Board() {
     if (!over) return;
 
     const taskId = active.id as string;
+    // The over.id will be the columnId ('todo', 'inprogress', 'done')
     const newStatus = over.id as any;
 
     await moveTask(taskId, newStatus, Date.now());
@@ -47,24 +48,36 @@ export default function Board() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <Box sx={{ p: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={4}>
-            <Column columnId="todo" title="To Do" />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Column columnId="inprogress" title="In Progress" />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Column columnId="done" title="Done" />
-          </Grid>
-        </Grid>
+      <Box
+        sx={{
+          p: 3,
+          display: "grid",
+          // Responsive columns: 1 column on mobile, 3 columns on medium screens+
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "1fr 1fr 1fr",
+          },
+          gap: 3,
+          alignItems: "start",
+        }}
+      >
+        <Column columnId="todo" title="To Do" />
+        <Column columnId="inprogress" title="In Progress" />
+        <Column columnId="done" title="Done" />
       </Box>
 
-      {/* This creates the floating preview on movement */}
+      {/* Floating preview that follows the mouse cursor */}
       <DragOverlay adjustScale={true}>
         {activeTask ? (
-          <Box sx={{ transform: "rotate(3deg)", cursor: "grabbing" }}>
+          <Box
+            sx={{
+              transform: "rotate(3deg)",
+              cursor: "grabbing",
+              width: "100%",
+              // Ensure the overlay looks exactly like the card
+              opacity: 0.9,
+            }}
+          >
             <TaskCard task={activeTask} isOverlay />
           </Box>
         ) : null}
