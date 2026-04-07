@@ -77,33 +77,37 @@ export const useTaskStore = create<TaskState>((set, get) => {
     },
 
     // ✅ Move Task
+    // Inside moveTask in useTaskStore.ts
     moveTask: async (
       taskId: string,
       newStatus: ColumnType,
       newOrder: number
     ) => {
-      console.log("Moving task", taskId, newStatus, newOrder);
-      // Optimistic UI
-      set((state) => ({
-        tasks: state.tasks.map((task) =>
+      // Optimistic UI Update
+      set((state) => {
+        const updatedTasks = state.tasks.map((task) =>
           task.id === taskId
-            ? {
-                ...task,
-                status: newStatus,
-                order_index: newOrder,
-              }
+            ? { ...task, status: newStatus, order_index: newOrder }
             : task
-        ),
-      }));
+        );
+        return { tasks: updatedTasks };
+      });
 
-      await supabase
+      // Database Update
+      const { error } = await supabase
         .from("tasks")
         .update({
           status: newStatus,
-
           order_index: newOrder,
         })
         .eq("id", taskId);
+
+      if (error) {
+        console.error("Failed to move task:", error);
+        // Optional: Refresh tasks from DB if error occurs to sync UI
+        const { data } = await supabase.from("tasks").select("*");
+        if (data) set({ tasks: data });
+      }
     },
 
     // ✅ Update Task
