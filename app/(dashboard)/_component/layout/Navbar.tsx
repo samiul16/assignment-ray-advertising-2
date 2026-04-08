@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -22,6 +22,8 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuIcon from "@mui/icons-material/Menu"; // Added Menu Icon
 import { User } from "@/types/user";
+import { useTaskStore } from "@/store/useTaskStore";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface NavbarProps {
   mode: "light" | "dark";
@@ -39,6 +41,17 @@ export default function Navbar({
   onMenuClick,
 }: NavbarProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const setSearchQuery = useTaskStore((state) => state.setSearchQuery);
+
+  const [localSearch, setLocalSearch] = useState("");
+
+  // debounce input
+  const debouncedSearch = useDebounce(localSearch, 300);
+
+  // update store only after debounce
+  useEffect(() => {
+    setSearchQuery(debouncedSearch);
+  }, [debouncedSearch]);
 
   return (
     <Box
@@ -87,7 +100,9 @@ export default function Navbar({
         {/* SEARCH: Shrinks on mobile */}
         <TextField
           size="small"
-          placeholder="Search"
+          placeholder="Search tasks..."
+          value={localSearch}
+          onChange={(e) => setLocalSearch(e.target.value)}
           InputProps={{
             startAdornment: (
               <SearchIcon fontSize="small" sx={{ mr: 1, opacity: 0.5 }} />
@@ -95,7 +110,9 @@ export default function Navbar({
           }}
           sx={{
             width: { xs: 100, sm: 200 },
-            "& .MuiOutlinedInput-root": { height: 32 },
+            "& .MuiOutlinedInput-root": {
+              height: 32,
+            },
           }}
         />
 

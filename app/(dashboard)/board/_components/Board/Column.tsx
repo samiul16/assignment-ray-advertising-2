@@ -1,26 +1,34 @@
 "use client";
+
 import { useDroppable } from "@dnd-kit/core";
+
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Box, Typography, Stack } from "@mui/material";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined"; // Icon for empty state
-import TaskCard from "./TaskCard";
-import { useMemo } from "react";
-import { Task } from "@/types/task";
-import { useTaskStore } from "@/store/useTaskStore";
 
-export default function Column({
-  columnId,
-  title,
-}: {
+import { Box, Typography, Stack } from "@mui/material";
+
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+
+import TaskCard from "./TaskCard";
+
+import { useMemo } from "react";
+
+import { Task } from "@/types/task";
+
+interface ColumnProps {
   columnId: string;
   title: string;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: columnId });
-  const tasks = useTaskStore((state) => state.tasks);
+  tasks: Task[];
+}
 
+export default function Column({ columnId, title, tasks }: ColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: columnId,
+  });
+
+  // ✅ Filter tasks for this column
   const columnTasks = useMemo(
     () =>
       tasks
@@ -40,7 +48,7 @@ export default function Column({
         bgcolor: isOver ? "rgba(0, 0, 0, 0.06)" : "rgba(0, 0, 0, 0.04)",
         borderRadius: 2,
         p: 1.5,
-        maxHeight: "calc(100vh - 160px)", // Adjusted height
+        maxHeight: "calc(100vh - 160px)",
         transition: "0.2s ease",
         border: "2px solid",
         borderColor: isOver ? "primary.main" : "transparent",
@@ -59,6 +67,7 @@ export default function Column({
         }}
       >
         {title}
+
         <Box
           component="span"
           sx={{
@@ -79,7 +88,7 @@ export default function Column({
           display: "flex",
           flexDirection: "column",
           gap: 1.5,
-          minHeight: 100, // Important for dropping into empty columns
+          minHeight: 100,
         }}
       >
         {columnTasks.length > 0 ? (
@@ -92,7 +101,6 @@ export default function Column({
             ))}
           </SortableContext>
         ) : (
-          /* EMPTY STATE UI */
           <Stack
             spacing={1}
             alignItems="center"
@@ -107,8 +115,12 @@ export default function Column({
             }}
           >
             <AssignmentOutlinedIcon
-              sx={{ fontSize: 32, color: "text.disabled" }}
+              sx={{
+                fontSize: 32,
+                color: "text.disabled",
+              }}
             />
+
             <Typography
               variant="caption"
               color="text.disabled"

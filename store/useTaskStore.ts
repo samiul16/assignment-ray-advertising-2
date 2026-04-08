@@ -27,6 +27,10 @@ interface TaskState {
 
   addTask: (data: Task, userName: string) => Promise<void>;
 
+  searchQuery: string;
+
+  setSearchQuery: (query: string) => void;
+
   initRealtime: () => void;
 }
 
@@ -35,6 +39,10 @@ let isRealtimeInitialized = false;
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
   notification: null,
+
+  searchQuery: "",
+
+  setSearchQuery: (query) => set({ searchQuery: query }),
 
   setNotification: (msg) => set({ notification: msg }),
 
