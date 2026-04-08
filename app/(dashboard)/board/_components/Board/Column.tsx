@@ -1,11 +1,11 @@
-// Column.tsx
 "use client";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined"; // Icon for empty state
 import TaskCard from "./TaskCard";
 import { useMemo } from "react";
 import { Task } from "@/types/task";
@@ -37,26 +37,39 @@ export default function Column({
         minWidth: 280,
         display: "flex",
         flexDirection: "column",
-        bgcolor: isOver ? "action.hover" : "background.paper",
-        borderRadius: 1.5,
-        p: 1,
-        maxHeight: "calc(100vh - 250px)",
-        transition: "0.2s",
+        bgcolor: isOver ? "rgba(0, 0, 0, 0.06)" : "rgba(0, 0, 0, 0.04)",
+        borderRadius: 2,
+        p: 1.5,
+        maxHeight: "calc(100vh - 160px)", // Adjusted height
+        transition: "0.2s ease",
+        border: "2px solid",
+        borderColor: isOver ? "primary.main" : "transparent",
       }}
     >
       <Typography
-        variant="caption"
+        variant="subtitle2"
         sx={{
-          p: 1,
+          px: 1,
+          mb: 2,
           fontWeight: 700,
           color: "text.secondary",
-          textTransform: "uppercase",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        {title}{" "}
-        <span style={{ marginLeft: 4, opacity: 0.7 }}>
+        {title}
+        <Box
+          component="span"
+          sx={{
+            bgcolor: "action.selected",
+            px: 1,
+            borderRadius: 1,
+            fontSize: "0.75rem",
+          }}
+        >
           {columnTasks.length}
-        </span>
+        </Box>
       </Typography>
 
       <Box
@@ -65,17 +78,46 @@ export default function Column({
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          gap: 1,
+          gap: 1.5,
+          minHeight: 100, // Important for dropping into empty columns
         }}
       >
-        <SortableContext
-          items={columnTasks.map((t: Task) => t.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {columnTasks.map((task: Task) => (
-            <TaskCard key={task.id} task={task} />
-          ))}
-        </SortableContext>
+        {columnTasks.length > 0 ? (
+          <SortableContext
+            items={columnTasks.map((t: Task) => t.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {columnTasks.map((task: Task) => (
+              <TaskCard key={task.id} task={task} />
+            ))}
+          </SortableContext>
+        ) : (
+          /* EMPTY STATE UI */
+          <Stack
+            spacing={1}
+            alignItems="center"
+            justifyContent="center"
+            sx={{
+              py: 4,
+              px: 2,
+              border: "1px dashed",
+              borderColor: "divider",
+              borderRadius: 2,
+              opacity: 0.6,
+            }}
+          >
+            <AssignmentOutlinedIcon
+              sx={{ fontSize: 32, color: "text.disabled" }}
+            />
+            <Typography
+              variant="caption"
+              color="text.disabled"
+              fontWeight={500}
+            >
+              No tasks here
+            </Typography>
+          </Stack>
+        )}
       </Box>
     </Box>
   );
