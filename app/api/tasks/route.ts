@@ -11,12 +11,15 @@ export async function GET() {
         ascending: true,
       });
 
+    console.log("Error ", data, error);
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json(data);
   } catch (error: unknown) {
+    console.log("Error ", error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

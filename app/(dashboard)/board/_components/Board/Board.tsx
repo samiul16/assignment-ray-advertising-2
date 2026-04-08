@@ -22,7 +22,7 @@ import { ColumnType, Task } from "@/types/task";
 import Cookies from "js-cookie";
 
 export default function Board() {
-  const { tasks, fetchTasks, moveTask, searchQuery } = useTaskStore();
+  const { tasks = [], fetchTasks, moveTask, searchQuery } = useTaskStore();
 
   const [activeTask, setActiveTask] = useState<Task | null>(null);
 
@@ -36,13 +36,15 @@ export default function Board() {
     fetchTasks();
   }, []);
 
+  console.log("tasks in board page", tasks);
+
   // ✅ Filter tasks globally
-  const filteredTasks = tasks.filter((task) =>
+  const filteredTasks = tasks?.filter((task) =>
     task.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDragStart = (e: DragStartEvent) => {
-    const task = tasks.find((t) => t.id === e.active.id);
+    const task = tasks?.find((t) => t.id === e.active.id);
 
     if (task) setActiveTask(task);
   };

@@ -106,7 +106,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   fetchTasks: async () => {
     const res = await fetch("/api/tasks");
 
-    const data = await res.json();
+    console.log("response ", res);
+
+    const data = (await res.json()) || [];
 
     set({ tasks: data });
   },
