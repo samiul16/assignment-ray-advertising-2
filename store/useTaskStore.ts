@@ -108,20 +108,48 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   moveTask: async (taskId, newStatus, newOrder, userName) => {
-    await fetch("/api/tasks/move", {
-      method: "PATCH",
+    // 1. Save a snapshot of the current tasks in case we need to roll back
+    const previousTasks = get().tasks;
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+    // 2. Perform the Optimistic Update
+    // We create a new array where the specific task is updated immediately
+    const optimisticallyUpdatedTasks = previousTasks.map((task) =>
+      task.id === taskId
+        ? { ...task, status: newStatus, order_index: newOrder }
+        : task
+    );
 
-      body: JSON.stringify({
-        taskId,
-        newStatus,
-        newOrder,
-        userName,
-      }),
-    });
+    // Update the local state instantly
+    set({ tasks: optimisticallyUpdatedTasks });
+
+    try {
+      const res = await fetch("/api/tasks/move", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          taskId,
+          newStatus,
+          newOrder,
+          userName,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to move task on server");
+      }
+
+      // Optional: You can update the state again with the actual response
+      // if the server returns precise order_indices, but usually not needed.
+    } catch (error) {
+      // 3. If the API fails, roll back to the previous state
+      console.error("Move task failed:", error);
+      set({
+        tasks: previousTasks,
+        notification: "Connection error: Could not save task position.",
+      });
+    }
   },
 
   updateTask: async (taskId, title, description, userName) => {
