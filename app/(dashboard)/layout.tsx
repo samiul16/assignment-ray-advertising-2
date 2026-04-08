@@ -11,8 +11,8 @@ import {
   GlobalStyles,
   Drawer,
 } from "@mui/material";
-import Sidebar from "@/app/(dashboard)/board/_components/layout/Sidebar";
-import Navbar from "@/app/(dashboard)/board/_components/layout/Navbar";
+import Sidebar from "@/app/(dashboard)/_component/layout/Sidebar";
+import Navbar from "@/app/(dashboard)/_component/layout/Navbar";
 import { User } from "@/types/user";
 
 export default function DashboardLayout({
