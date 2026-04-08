@@ -10,8 +10,8 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 import { useTaskStore } from "@/store/useTaskStore";
-import Column from "@/components/Board/Column";
-import TaskCard from "@/components/Board/TaskCard";
+import Column from "@/app/(dashboard)/board/_components/Board/Column";
+import TaskCard from "@/app/(dashboard)/board/_components/Board/TaskCard";
 import { Box } from "@mui/material";
 import { Task } from "@/types/task";
 import Cookies from "js-cookie";

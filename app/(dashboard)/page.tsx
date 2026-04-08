@@ -1,6 +1,6 @@
 "use client";
-import Board from "@/components/Board/Board";
-import AddTaskModal from "@/components/AddTaskModal";
+import Board from "@/app/(dashboard)/board/_components/Board/Board";
+import AddTaskModal from "@/app/(dashboard)/board/_components/AddTaskModal";
 import { Box, Typography, Avatar, AvatarGroup } from "@mui/material";
 
 export default function BoardPage() {

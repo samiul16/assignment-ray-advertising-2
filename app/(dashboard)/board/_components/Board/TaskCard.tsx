@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, Typography, Box, Avatar } from "@mui/material";
 import BookmarkIcon from "@mui/icons-material/Bookmark";
-import EditTaskModal from "@/components/EditTaskModal";
+import EditTaskModal from "@/app/(dashboard)/board/_components/EditTaskModal";
 import { Task } from "@/types/task";
 
 export default function TaskCard({
