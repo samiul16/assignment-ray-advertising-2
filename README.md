@@ -220,6 +220,16 @@ Update UI
 
 ---
 
+## Error Handling
+
+The application includes structured error boundaries using:
+
+- `app/error.tsx` — Global errors
+- `app/(dashboard)/error.tsx` — Dashboard errors
+- `app/not-found.tsx` — 404 handling
+
+These improve resilience and user experience.
+
 # 2️⃣ Broadcast Channel (User Notifications)
 
 Used to send UI notifications between users.
