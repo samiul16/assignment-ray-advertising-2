@@ -64,9 +64,9 @@ export default function Board() {
           alignItems: "start",
         }}
       >
-        <Column columnId="todo" title="To Do" />
-        <Column columnId="inprogress" title="In Progress" />
-        <Column columnId="done" title="Done" />
+        <Column columnId="todo" title="To Do" tasks={tasks} />
+        <Column columnId="inprogress" title="In Progress" tasks={tasks} />
+        <Column columnId="done" title="Done" tasks={tasks} />
       </Box>
 
       {/* Floating preview that follows the mouse cursor */}
